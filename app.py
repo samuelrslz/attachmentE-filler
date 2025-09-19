@@ -1,76 +1,45 @@
 import streamlit as st
-import fitz  # PyMuPDF
-from datetime import date
-import subprocess
-import os
+from docx import Document
+import io
+from fpdf import FPDF
 
-st.title("Word → PDF Annotator (Online)")
+st.title("Word Filler and PDF Export")
 
-st.markdown("""
-Upload a Word document (.docx). 
-The app will convert it to PDF, place your annotations (name, date, checkmarks, signature), 
-and let you download the final PDF.
-""")
+# Upload Word document
+uploaded_file = st.file_uploader("Choose a Word document", type=["docx"])
 
-# --- File Upload ---
-uploaded_docx = st.file_uploader("Upload Word Document", type=["docx"])
+if uploaded_file:
+    # Load the Word document
+    doc = Document(uploaded_file)
 
-# --- Coordinates Input ---
-st.sidebar.header("Coordinates (points)")
-name_x = st.sidebar.number_input("Name X", value=100)
-name_y = st.sidebar.number_input("Name Y", value=150)
-date_x = st.sidebar.number_input("Date X", value=100)
-date_y = st.sidebar.number_input("Date Y", value=180)
-check_x = st.sidebar.number_input("Checkmark X", value=200)
-check_y = st.sidebar.number_input("Checkmark Y", value=250)
-check_w = st.sidebar.number_input("Checkmark Width", value=20)
-check_h = st.sidebar.number_input("Checkmark Height", value=20)
-sig_x = st.sidebar.number_input("Signature X", value=100)
-sig_y = st.sidebar.number_input("Signature Y", value=400)
-sig_w = st.sidebar.number_input("Signature Width", value=200)
-sig_h = st.sidebar.number_input("Signature Height", value=60)
+    st.write("Document loaded! Here are the paragraphs:")
+    for i, para in enumerate(doc.paragraphs):
+        st.write(f"{i+1}: {para.text}")
 
-# --- Static images in repo ---
-checkmark_path = "checkmark.png"
-signature_path = "signature.png"
+    # Example: Replace placeholder text
+    placeholder = st.text_input("Text to replace:", "PLACEHOLDER")
+    replacement = st.text_input("Replacement text:", "Hello World")
 
-if st.button("Generate PDF") and uploaded_docx:
-    # --- Save uploaded Word file ---
-    input_docx = "input.docx"
-    with open(input_docx, "wb") as f:
-        f.write(uploaded_docx.read())
+    if st.button("Fill Word and Export PDF"):
+        # Replace text in Word
+        for para in doc.paragraphs:
+            if placeholder in para.text:
+                para.text = para.text.replace(placeholder, replacement)
 
-    # --- Convert Word to PDF using LibreOffice (Streamlit Cloud has it) ---
-    st.info("Converting Word to PDF...")
-    subprocess.run([
-        "libreoffice", "--headless", "--convert-to", "pdf", input_docx, "--outdir", "."
-    ])
-    temp_pdf = input_docx.replace(".docx", ".pdf")
+        # Save Word to memory
+        word_stream = io.BytesIO()
+        doc.save(word_stream)
+        st.download_button("Download filled Word", data=word_stream.getvalue(), file_name="filled.docx")
 
-    # --- Annotate PDF ---
-    st.info("Annotating PDF...")
-    pdf = fitz.open(temp_pdf)
-    page = pdf[0]  # first page
+        # Convert Word to simple PDF
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_auto_page_break(auto=True, margin=15)
+        pdf.set_font("Arial", size=12)
 
-    # Add text
-    page.insert_text((name_x, name_y), "Samuel Rios-Lazo", fontsize=12, color=(0,0,0))
-    page.insert_text((date_x, date_y), str(date.today()), fontsize=12, color=(0,0,0))
+        for para in doc.paragraphs:
+            pdf.multi_cell(0, 10, para.text)
 
-    # Add checkmark image
-    rect_check = fitz.Rect(check_x, check_y, check_x+check_w, check_y+check_h)
-    with open(checkmark_path, "rb") as f:
-        page.insert_image(rect_check, stream=f.read())
-
-    # Add signature image
-    rect_sig = fitz.Rect(sig_x, sig_y, sig_x+sig_w, sig_y+sig_h)
-    with open(signature_path, "rb") as f:
-        page.insert_image(rect_sig, stream=f.read())
-
-    final_pdf = "final.pdf"
-    pdf.save(final_pdf)
-    pdf.close()
-
-    # --- Download button ---
-    st.success("✅ PDF generated!")
-    with open(final_pdf, "rb") as f:
-        st.download_button("Download Final PDF", f, file_name="final.pdf")
+        pdf_stream = io.BytesIO()
+        pdf.output(pdf_stream)
+        st.download_button("Download PDF", data=pdf_stream.getvalue(), file_name="filled.pdf")
