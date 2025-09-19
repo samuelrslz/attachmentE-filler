@@ -17,7 +17,7 @@ uploaded_docx = st.file_uploader("Upload Word Document", type=["docx"])
 
 # --- Coordinates Input ---
 st.sidebar.header("Coordinates (points)")
-name_x = st.sidebar.number_input("Name X", value=100)
+name_x = st.sidebar.number_input("Name X", value=100)``
 name_y = st.sidebar.number_input("Name Y", value=150)
 date_x = st.sidebar.number_input("Date X", value=100)
 date_y = st.sidebar.number_input("Date Y", value=180)
