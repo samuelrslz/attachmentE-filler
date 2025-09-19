@@ -1,9 +1,10 @@
 import streamlit as st
 from docx import Document
 import io
-from fpdf import FPDF
+import fitz  # PyMuPDF
+from datetime import date
 
-st.title("Word Filler and PDF Export")
+st.title("Word Filler and PDF Export with Annotations")
 
 # Upload Word document
 uploaded_file = st.file_uploader("Choose a Word document", type=["docx"])
@@ -16,7 +17,7 @@ if uploaded_file:
     for i, para in enumerate(doc.paragraphs):
         st.write(f"{i+1}: {para.text}")
 
-    # Example: Replace placeholder text
+    # Replace placeholders
     placeholder = st.text_input("Text to replace:", "PLACEHOLDER")
     replacement = st.text_input("Replacement text:", "Hello World")
 
@@ -31,15 +32,20 @@ if uploaded_file:
         doc.save(word_stream)
         st.download_button("Download filled Word", data=word_stream.getvalue(), file_name="filled.docx")
 
-        # Convert Word to simple PDF
-        pdf = FPDF()
-        pdf.add_page()
-        pdf.set_auto_page_break(auto=True, margin=15)
-        pdf.set_font("Arial", size=12)
-
+        # Convert Word to simple PDF using PyMuPDF
+        pdf_doc = fitz.open()  # new PDF
         for para in doc.paragraphs:
-            pdf.multi_cell(0, 10, para.text)
+            page = pdf_doc.new_page()
+            page.insert_text((50, 50), para.text, fontsize=12)
+
+        # Annotate PDF with images and text at specific coordinates
+        for page in pdf_doc:
+            # Example positions (x, y in points)
+            page.insert_image(fitz.Rect(100, 100, 120, 120), filename="checkmark.png")
+            page.insert_text((200, 200), "Your Name", fontsize=14)
+            page.insert_text((200, 230), f"Date: {date.today()}", fontsize=12)
+            page.insert_image(fitz.Rect(200, 250, 300, 300), filename="signature.png")
 
         pdf_stream = io.BytesIO()
-        pdf.output(pdf_stream)
-        st.download_button("Download PDF", data=pdf_stream.getvalue(), file_name="filled.pdf")
+        pdf_doc.save(pdf_stream)
+        st.download_button("Download annotated PDF", data=pdf_stream.getvalue(), file_name="filled_annotated.pdf")
