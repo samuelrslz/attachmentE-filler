@@ -69,10 +69,16 @@ if __name__ == "__main__":
 
     # --- STEP 2: Define annotations ---
     annotations = [
-        {"type": "text", "value": "Samuel Rios-Lazo", "x": 150, "y": 512, "fontsize": 12},
-        {"type": "text", "value": str(date.today()), "x": 120, "y": 565, "fontsize": 12},
-        {"type": "image", "value": checkmark_path, "x": 200, "y": 250, "w": 20, "h": 20},
-        {"type": "image", "value": signature_path, "x": 100, "y": 517, "w": 100, "h": 25},
+        {"type": "text", "value": "Samuel Rios-Lazo", "x": 130, "y": 510, "fontsize": 12},
+        {"type": "text", "value": "N/A", "x": 40, "y": 295, "fontsize": 12},
+        {"type": "text", "value": str(date.today()), "x": 100, "y": 565, "fontsize": 12},
+        {"type": "image", "value": signature_path, "x": 80, "y": 513, "w": 200, "h": 33},
+        {"type": "image", "value": checkmark_path, "x": 66, "y": 251, "w": 20, "h": 20},
+        {"type": "image", "value": checkmark_path, "x": 66, "y": 225, "w": 20, "h": 20},
+        {"type": "image", "value": checkmark_path, "x": 66, "y": 199, "w": 20, "h": 20},
+        {"type": "image", "value": checkmark_path, "x": 66, "y": 315, "w": 20, "h": 20},
+        {"type": "image", "value": checkmark_path, "x": 66, "y": 354, "w": 20, "h": 20},
+        {"type": "image", "value": checkmark_path, "x": 66, "y": 382, "w": 20, "h": 20},
     ]
 
     # --- STEP 3: Annotate PDF ---
